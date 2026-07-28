@@ -30,3 +30,25 @@ app.get(
     });
   }
 );
+
+// TEMPORARY diagnostic endpoint - reports whether required env vars are
+// present without ever exposing their actual values. Remove once the
+// DATABASE_URL deployment issue is confirmed fixed.
+app.get("/debug-env", (req: Request, res: Response) => {
+  const check = (key: string) => {
+    const value = process.env[key];
+    return {
+      present: !!value,
+      length: value ? value.length : 0,
+      startsWith: value ? value.slice(0, 12) : null,
+    };
+  };
+  res.status(200).json({
+    DATABASE_URL: check("DATABASE_URL"),
+    NODE_ENV: check("NODE_ENV"),
+    SMTP_MAIL: check("SMTP_MAIL"),
+    SMTP_PASSWORD: check("SMTP_PASSWORD"),
+    EMAIL_ACTIVATION_SECRET: check("EMAIL_ACTIVATION_SECRET"),
+    PORT: process.env.PORT || null,
+  });
+});
