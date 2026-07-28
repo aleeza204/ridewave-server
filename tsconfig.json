@@ -6,6 +6,9 @@
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  }
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./build",
+    "rootDir": "."
+  },
+  "exclude": ["node_modules", "build"]
 }
