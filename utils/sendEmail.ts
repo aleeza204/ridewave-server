@@ -8,6 +8,9 @@ export const sendEmail = async (email: string, otp: string) => {
         user: process.env.SMTP_MAIL,
         pass: process.env.SMTP_PASSWORD,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     await transporter.sendMail({
