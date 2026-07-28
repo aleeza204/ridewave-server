@@ -324,23 +324,32 @@ export const acceptRide = async (req: any, res: Response) => {
         .json({ success: false, message: "rideId is required" });
     }
 
-    const { count } = await prisma.rides.updateMany({
-      where: { id: rideId, driverId: null },
-      data: {
-        driverId: req.driver.id,
-        status: "Processing",
-      },
-    });
+    // Prisma's MongoDB connector doesn't reliably match `driverId: null` in a
+    // where filter (a known Prisma+Mongo gap between "field is null" and
+    // "field is unset"), so a combined updateMany filter on it always
+    // returns count 0 even for genuinely unassigned rides. Check and update
+    // in two steps instead - the brief race window this opens (two drivers
+    // accepting the exact same ride in the same instant) is an acceptable
+    // trade-off against the previous version accepting zero rides ever.
+    const existingRide = await prisma.rides.findUnique({ where: { id: rideId } });
 
-    if (count === 0) {
+    if (!existingRide) {
+      return res.status(404).json({ success: false, message: "Ride not found" });
+    }
+
+    if (existingRide.driverId) {
       return res.status(409).json({
         success: false,
         message: "This ride has already been accepted by another driver",
       });
     }
 
-    const updatedRide = await prisma.rides.findUnique({
+    const updatedRide = await prisma.rides.update({
       where: { id: rideId },
+      data: {
+        driverId: req.driver.id,
+        status: "Processing",
+      },
       include: { user: true },
     });
 
