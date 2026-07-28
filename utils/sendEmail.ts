@@ -11,6 +11,10 @@ export const sendEmail = async (email: string, otp: string) => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
+      // Railway's network can't route outbound IPv6, but Gmail's SMTP host
+      // resolves to both A and AAAA records - force IPv4 so it doesn't try
+      // (and hang/fail on) the unreachable IPv6 address.
+      family: 4,
     });
 
     await transporter.sendMail({
